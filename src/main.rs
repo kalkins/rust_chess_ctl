@@ -40,7 +40,7 @@ fn main() {
                 let mut s = base.clone();
                 s.push_str(&input);
                 buffer.push(Some(s));
-                draw(&mut window, &buffer, None);
+                draw(&mut window, &buffer, None, &game);
                 if let Some(inp) = window.getch() {
                     if let Input::Character(ch) = inp {
                         match ch {
@@ -108,7 +108,7 @@ fn main() {
             buffer.push(None);
             buffer.push(Some("Press any key to quit.".to_string()));
 
-            draw(&mut window, &buffer, None);
+            draw(&mut window, &buffer, None, &game);
             break;
         }
     }
@@ -119,8 +119,10 @@ fn main() {
     pancurses::endwin();
 }
 
-fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: Option<usize>) {
+fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: Option<usize>, game: &Game) {
     let len = buffer.len();
+    let mut line = 0;
+    let width = window.get_max_x();
     let mut height: usize = 0;
     for _ in 0..window.get_max_y() {
         height += 1;
@@ -140,8 +142,48 @@ fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: Option
             window.addstr(v);
         }
         if i != len - 1 {
-            window.addch('\n');
+            line += 1;
+            window.mv(line, 0);
         }
     }
+
+    if height > 8 && width > 40 {
+        let start_x = width - (width / 4 + 4);
+        let start_y = window.get_max_y() / 2 - 4;
+        let board = game.board_to_string();
+        let mut i: usize = 0;
+        let mut y = start_y;
+        let mut x;
+
+        for tmp in 0..8 {
+            x = start_x;
+            window.mvaddch(y, x-2, match tmp {
+                0 => '8',
+                1 => '7',
+                2 => '6',
+                3 => '5',
+                4 => '4',
+                5 => '3',
+                6 => '2',
+                7 => '1',
+                _ => panic!(),
+            });
+            for _ in 0..8 {
+                window.mvaddch(y, x, board.chars().nth(i).unwrap());
+                x += 1;
+                i += 1;
+            }
+            y += 1;
+            i += 1;
+        }
+        window.mvaddstr(y+1, start_x, "ABCDEFGH");
+
+        x = 0;
+        for _ in 0..buffer.last().unwrap().as_ref().unwrap().len() {
+            x += 1;
+        }
+        window.mv(line, x);
+    }
+
     window.refresh();
 }
