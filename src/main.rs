@@ -9,6 +9,7 @@ fn main() {
     let mut game = Game::new();
     let mut color = Color::Black;
     let mut turn = 0;
+    let mut scroll: usize;
     let mut base: String = String::new();
     let mut input: String;
     let mut invalid: bool;
@@ -33,6 +34,7 @@ fn main() {
 
         invalid = false;
         loop {
+            scroll = 0;
             input = String::new();
             buffer.push(None);
             loop {
@@ -40,14 +42,39 @@ fn main() {
                 let mut s = base.clone();
                 s.push_str(&input);
                 buffer.push(Some(s));
-                draw(&mut window, &buffer, None, &game);
+                draw(&mut window, &buffer, scroll, &game);
                 if let Some(inp) = window.getch() {
                     if let Input::Character(ch) = inp {
                         match ch {
                             'a' ... 'z' | 'A' ... 'Z' | '0' ... '9' => {
-                                input.push(ch);
+                                scroll = 0;
+                                if ch == 'v' {
+                                    buffer.push(Some("test".to_string()));
+                                } else {
+                                    input.push(ch);
+                                }
                             },
                             '\u{0008}' | '\u{007f}' => {input.pop();},
+                            '\u{001b}' => {
+                                window.getch();
+                                match window.getch().unwrap() {
+                                    Input::Character('A') => {
+                                        let mut height: usize = 0;
+                                        for _ in 0..window.get_max_y() {
+                                            height += 1;
+                                        }
+                                        if buffer.len() > height + scroll {
+                                            scroll += 1;
+                                        }
+                                    },
+                                    Input::Character('B') => {
+                                        if scroll > 0 {
+                                            scroll -= 1;
+                                        }
+                                    },
+                                    _ => panic!("Invalid input '{}'", ch),
+                                }
+                            },
                             '\n' | '\t' | ' ' => break,
                             _ => panic!("Invalid input '{}'", ch),
                         }
@@ -108,7 +135,7 @@ fn main() {
             buffer.push(None);
             buffer.push(Some("Press any key to quit.".to_string()));
 
-            draw(&mut window, &buffer, None, &game);
+            draw(&mut window, &buffer, scroll, &game);
             break;
         }
     }
@@ -119,7 +146,7 @@ fn main() {
     pancurses::endwin();
 }
 
-fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: Option<usize>, game: &Game) {
+fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: usize, game: &Game) {
     let len = buffer.len();
     let mut line = 0;
     let width = window.get_max_x();
@@ -128,20 +155,20 @@ fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: Option
         height += 1;
     }
 
-    let start: usize = if let Some(v) = index {
-        v
-    } else if len > height {
-        len - height
+    let start: usize = if len > height {
+        len - height - index
     } else {
         0
     };
 
     window.erase();
-    for i in start..len {
-        if let Some(ref v) = buffer[i] {
+    for i in 0..height {
+        if let Some(ref v) = buffer[start + i] {
             window.addstr(v);
         }
-        if i != len - 1 {
+        if start + i == len - 1 {
+            break;
+        } else if i != height - 1 {
             line += 1;
             window.mv(line, 0);
         }
