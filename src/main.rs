@@ -182,6 +182,7 @@ fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: usize,
         let mut y = start_y;
         let mut x;
 
+        window.mvaddstr(start_y - 2, start_x, "ABCDEFGH");
         for tmp in 0..8 {
             x = start_x;
             window.mvaddch(y, x-3, match tmp {
@@ -195,11 +196,25 @@ fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: usize,
                 7 => '1',
                 _ => panic!(),
             });
+
             for _ in 0..8 {
                 window.mvaddch(y, x, board.chars().nth(i).unwrap());
                 x += 1;
                 i += 1;
             }
+
+            window.mvaddch(y, x+2, match tmp {
+                0 => '8',
+                1 => '7',
+                2 => '6',
+                3 => '5',
+                4 => '4',
+                5 => '3',
+                6 => '2',
+                7 => '1',
+                _ => panic!(),
+            });
+
             y += 1;
             i += 1;
         }
