@@ -184,7 +184,7 @@ fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: usize,
 
         for tmp in 0..8 {
             x = start_x;
-            window.mvaddch(y, x-2, match tmp {
+            window.mvaddch(y, x-3, match tmp {
                 0 => '8',
                 1 => '7',
                 2 => '6',
