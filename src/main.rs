@@ -47,7 +47,7 @@ fn main() {
                             'a' ... 'z' | 'A' ... 'Z' | '0' ... '9' => {
                                 input.push(ch);
                             },
-                            '\u{0008}' => {input.pop();},
+                            '\u{0008}' | '\u{007f}' => {input.pop();},
                             '\n' | '\t' | ' ' => break,
                             _ => panic!("Invalid input '{}'", ch),
                         }
