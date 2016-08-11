@@ -8,14 +8,18 @@ fn main() {
     let mut window = pancurses::initscr();
     let mut game = Game::new();
     let mut color = Color::Black;
+    let mut unicode = false;
     let mut turn = 0;
     let mut scroll: usize;
     let mut base: String = String::new();
     let mut input: String;
     let mut invalid: bool;
     let mut proper: String;
-    let mut buffer: Vec<Option<String>> = vec![Some("Welcome to command line chess. \
-        Execute a move by typing in the algebraic notation for the move and hitting Return.".to_string()), None, None];
+    let mut buffer: Vec<Option<String>> = Vec::new();
+    buffer.push(Some("Welcome to command line chess. Execute a move by typing in the algebraic \
+                     notation for the move and hitting Return.".to_string()));
+    buffer.push(None);
+    buffer.push(None);
 
     pancurses::noecho();
     window.nodelay(false);
@@ -42,7 +46,7 @@ fn main() {
                 let mut s = base.clone();
                 s.push_str(&input);
                 buffer.push(Some(s));
-                draw(&mut window, &buffer, scroll, &game);
+                draw(&mut window, &buffer, scroll, &game, unicode);
                 if let Some(inp) = window.getch() {
                     if let Input::Character(ch) = inp {
                         match ch {
@@ -89,7 +93,7 @@ fn main() {
                         buffer.remove(len-2);
                     }
 
-                    proper = game.move_to_an(&v, true);
+                    proper = game.move_to_an(&v, true, unicode);
                     buffer.pop();
                     if color == Color::Black {
                         let mut s = base.clone();
@@ -135,7 +139,7 @@ fn main() {
             buffer.push(None);
             buffer.push(Some("Press any key to quit.".to_string()));
 
-            draw(&mut window, &buffer, scroll, &game);
+            draw(&mut window, &buffer, scroll, &game, unicode);
             break;
         }
     }
@@ -146,7 +150,7 @@ fn main() {
     pancurses::endwin();
 }
 
-fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: usize, game: &Game) {
+fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: usize, game: &Game, unicode: bool) {
     let len = buffer.len();
     let mut line = 0;
     let width = window.get_max_x();
@@ -177,7 +181,7 @@ fn draw(window: &mut pancurses::Window, buffer: &[Option<String>], index: usize,
     if height > 8 && width > 40 {
         let start_x = width - (width / 4 + 4);
         let start_y = window.get_max_y() / 2 - 4;
-        let board = game.board_to_string();
+        let board = game.board_to_string(unicode);
         let mut i: usize = 0;
         let mut y = start_y;
         let mut x;
